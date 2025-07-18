@@ -1,0 +1,369 @@
+{% extends 'trello/base.html' %}
+
+{% block title %}{{ project.title }} - TrelloClone{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 col-md-12 order-2 order-lg-1">
+        <div class="auth-card p-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-start mb-4 gap-3">
+                <div class="w-100">
+                    <h2 class="fw-bold text-primary">{{ project.title }}</h2>
+                    <div class="d-flex flex-wrap gap-1 mb-2">
+                        {% if project.visibility == 'public' %}
+                            <span class="badge bg-success">Publiczny</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Prywatny</span>
+                        {% endif %}
+                        
+                        {% if project.status == 'active' %}
+                            <span class="badge bg-primary">Aktywny</span>
+                        {% elif project.status == 'completed' %}
+                            <span class="badge bg-success">Zakończony</span>
+                        {% elif project.status == 'paused' %}
+                            <span class="badge bg-secondary">Wstrzymany</span>
+                        {% endif %}
+                        
+                        {% if project.owner == user %}
+                            <span class="badge bg-info">Właściciel</span>
+                        {% elif is_member %}
+                            <span class="badge bg-secondary">Członek</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto">
+                    {% if project.owner == user %}
+                        <a href="{% url 'edit_project' project.id %}" class="btn btn-warning btn-sm w-100 w-sm-auto">
+                            <i class="bi bi-pencil"></i> Edytuj
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary w-100 w-sm-auto">
+                        ← Powrót do dashboard
+                    </a>
+                </div>
+            </div>
+
+            {% if project.description %}
+            <div class="mb-4">
+                <h5>Opis projektu</h5>
+                <p class="text-muted">{{ project.description }}</p>
+            </div>
+            {% endif %}
+
+            <div class="mb-5">
+                <h5 class="fw-bold text-primary mb-3">Tablica zadań</h5>
+                <div class="row kanban-board g-3">
+                    {% for column in columns %}
+                    <div class="col-lg-4 col-md-6 col-12 mb-4">
+                        <div class="card kanban-column h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-bold">
+                                    {{ column.name }}
+                                    <span class="badge bg-secondary">{{ column.tasks.count }}</span>
+                                </h6>
+                                {% if user.is_authenticated %}
+                                <a href="{% url 'add_task' project.id column.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-plus"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                            <div class="card-body task-list" data-column-id="{{ column.id }}">
+                                {% for task in column.tasks.all %}
+                                <div class="task-card card mb-2" data-task-id="{{ task.id }}">
+                                    <div class="card-body p-2">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <h6 class="card-title mb-1 flex-grow-1">{{ task.title }}</h6>
+                                            {% if task.created_by == user or project.owner == user or user.is_superuser %}
+                                            <div class="dropdown ms-2">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-three-dots"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li><a class="dropdown-item" href="{% url 'edit_task' project.id task.id %}">
+                                                        <i class="bi bi-pencil"></i> Edytuj
+                                                    </a></li>
+                                                    <li>
+                                                        <form method="post" action="{% url 'delete_task' project.id task.id %}" class="d-inline">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="dropdown-item text-danger" 
+                                                                    onclick="return confirm('Czy na pewno chcesz usunąć to zadanie?')">
+                                                                <i class="bi bi-trash"></i> Usuń
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        {% if task.description %}
+                                        <p class="card-text small text-muted">{{ task.description|truncatewords:10 }}</p>
+                                        {% endif %}
+                                        
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="d-flex gap-1">
+                                                {% if task.priority == 'high' %}
+                                                    <span class="badge bg-danger">Wysoki</span>
+                                                {% elif task.priority == 'medium' %}
+                                                    <span class="badge bg-warning text-dark">Średni</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Niski</span>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            {% if task.assigned_to %}
+                                            <small class="text-muted">
+                                                <i class="bi bi-person"></i> {{ task.assigned_to.username }}
+                                            </small>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        {% if task.due_date %}
+                                        <div class="mt-1">
+                                            <small class="text-muted">
+                                                <i class="bi bi-calendar"></i> {{ task.due_date|date:"d.m.Y H:i" }}
+                                            </small>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="mt-1">
+                                            <small class="text-muted">
+                                                Utworzone przez: {{ task.created_by.username }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="text-center text-muted py-3">
+                                    <p class="small">Brak zadań</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mt-5">
+                <h5 class="fw-bold text-primary mb-3">
+                    Komentarze 
+                    <span class="badge bg-light text-dark">{{ comments.count }}</span>
+                </h5>
+
+                {% if user.is_authenticated %}
+                <div class="mb-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ comment_form.content }}
+                            {% if comment_form.content.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in comment_form.content.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" name="add_comment" class="btn btn-primary btn-sm">
+                            <i class="bi bi-chat-dots"></i> Dodaj komentarz
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+
+                <div class="comments-list">
+                    {% for comment in comments %}
+                        <div class="card mb-3 border-light">
+                            <div class="card-body">
+                                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-start mb-2 gap-2">
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <strong>{{ comment.author.username }}</strong>
+                                        {% if comment.author == project.owner %}
+                                            <span class="badge bg-info text-dark">Właściciel</span>
+                                        {% endif %}
+                                        {% if comment.author.is_superuser %}
+                                            <span class="badge bg-warning text-dark">Superuser</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2">
+                                        <small class="text-muted text-nowrap">
+                                            {{ comment.created_at|date:"d.m.Y H:i" }}
+                                            {% if comment.is_edited %}
+                                                <span class="text-warning">(edytowany)</span>
+                                            {% endif %}
+                                        </small>
+                                        {% if comment.author == user or project.owner == user or user.is_superuser %}
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-three-dots"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    {% if comment.author == user %}
+                                                        <li><a class="dropdown-item" href="{% url 'edit_comment' project.id comment.id %}">
+                                                            <i class="bi bi-pencil"></i> Edytuj
+                                                        </a></li>
+                                                    {% endif %}
+                                                    {% if comment.author == user or project.owner == user or user.is_superuser %}
+                                                        <li>
+                                                            <form method="post" action="{% url 'delete_comment' project.id comment.id %}" class="d-inline">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="dropdown-item text-danger" 
+                                                                        onclick="return confirm('Czy na pewno chcesz usunąć ten komentarz?')">
+                                                                    <i class="bi bi-trash"></i> Usuń
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <p class="mb-0">{{ comment.content|linebreaks }}</p>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-4">
+                            <p class="text-muted">Brak komentarzy. Bądź pierwszy!</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 col-md-12 order-1 order-lg-2">
+        <div class="auth-card p-4 mb-4">
+            <h5 class="fw-bold text-primary mb-3">Informacje o projekcie</h5>
+            <div class="mb-2">
+                <strong>Właściciel:</strong> {{ project.owner.username }}<br>
+                <strong>Status:</strong> 
+                {% if project.status == 'active' %}
+                    <span class="text-primary">Aktywny</span>
+                {% elif project.status == 'completed' %}
+                    <span class="text-success">Zakończony</span>
+                    {% if project.completed_at %}
+                        <br><small class="text-muted">Zakończono: {{ project.completed_at|date:"d.m.Y H:i" }}</small>
+                    {% endif %}
+                {% elif project.status == 'paused' %}
+                    <span class="text-secondary">Wstrzymany</span>
+                {% endif %}<br>
+                <strong>Utworzony:</strong> {{ project.created_at|date:"d.m.Y H:i" }}<br>
+                <strong>Ostatnia aktualizacja:</strong> {{ project.updated_at|date:"d.m.Y H:i" }}
+            </div>
+            
+            {% if project.owner == user and project.visibility == 'private' %}
+            <div class="mt-3">
+                <h6>Kod dostępu</h6>
+                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2">
+                    <code class="bg-light p-2 rounded flex-grow-1 w-100">{{ project.access_code }}</code>
+                    <button class="btn btn-sm btn-outline-primary w-100 w-sm-auto" onclick="copyToClipboard('{{ project.access_code }}')">
+                        Kopiuj
+                    </button>
+                </div>
+                <small class="text-muted d-block mt-1">Udostępnij ten kod innym użytkownikom</small>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="auth-card p-4">
+            <h5 class="fw-bold text-primary mb-3">Członkowie projektu</h5>
+            <div class="mb-2">
+                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center mb-1 gap-1">
+                    <strong>{{ project.owner.username }}</strong>
+                    <span class="badge bg-primary">Właściciel</span>
+                </div>
+            </div>
+            
+            {% for member in project.members.all %}
+                {% if member != project.owner %}
+                <div class="mb-1">
+                    <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-1">
+                        {{ member.username }}
+                        <span class="badge bg-secondary">Członek</span>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+            
+            {% if not project.members.all and project.owner != user %}
+                <p class="text-muted small">Brak dodatkowych członków</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        alert('Kod został skopiowany do schowka!');
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const taskCards = document.querySelectorAll('.task-card');
+    const taskLists = document.querySelectorAll('.task-list');
+    
+    taskCards.forEach(card => {
+        card.draggable = true;
+        
+        card.addEventListener('dragstart', function(e) {
+            e.dataTransfer.setData('text/plain', this.dataset.taskId);
+            this.classList.add('dragging');
+        });
+        
+        card.addEventListener('dragend', function(e) {
+            this.classList.remove('dragging');
+        });
+    });
+    
+    taskLists.forEach(list => {
+        list.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        });
+        
+        list.addEventListener('dragleave', function(e) {
+            this.classList.remove('drag-over');
+        });
+        
+        list.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            const taskId = e.dataTransfer.getData('text/plain');
+            const columnId = this.dataset.columnId;
+            
+            moveTask(taskId, columnId);
+        });
+    });
+});
+
+function moveTask(taskId, columnId) {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const projectId = {{ project.id }};
+    
+    fetch(`/project/${projectId}/move-task/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken
+        },
+        body: `task_id=${taskId}&column_id=${columnId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Błąd podczas przenoszenia zadania: ' + (data.error || 'Nieznany błąd'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Błąd podczas przenoszenia zadania');
+    });
+}
+</script>
+{% endblock %}

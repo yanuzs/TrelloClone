@@ -1,0 +1,93 @@
+{% extends 'trello/base.html' %}
+
+{% block title %}Rejestracja - TrelloClone{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+        <div class="auth-card p-4">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold text-primary">Rejestracja</h2>
+                <p class="text-muted">Utwórz nowe konto</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.username.id_for_label }}" class="form-label">Nazwa użytkownika</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.username.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if form.username.help_text %}
+                        <div class="form-text">{{ form.username.help_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.password1.id_for_label }}" class="form-label">Hasło</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.password1.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if form.password1.help_text %}
+                        <div class="form-text">{{ form.password1.help_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.password2.id_for_label }}" class="form-label">Potwierdź hasło</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.password2.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if form.password2.help_text %}
+                        <div class="form-text">{{ form.password2.help_text }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <div class="form-check">
+                        {{ form.is_superuser }}
+                        <label class="form-check-label" for="{{ form.is_superuser.id_for_label }}">
+                            <strong>{{ form.is_superuser.label }}</strong>
+                        </label>
+                        <div class="form-text">
+                            {{ form.is_superuser.help_text }}
+                        </div>
+                        {% if form.is_superuser.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.is_superuser.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-primary">Zarejestruj się</button>
+                </div>
+            </form>
+
+            <div class="text-center">
+                <p class="text-muted">Masz już konto?</p>
+                <a href="{% url 'login' %}" class="btn btn-outline-primary">Zaloguj się</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

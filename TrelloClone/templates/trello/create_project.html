@@ -1,0 +1,65 @@
+{% extends 'trello/base.html' %}
+
+{% block title %}Utwórz projekt - TrelloClone{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="auth-card p-4">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold text-primary">Utwórz nowy projekt</h2>
+                <p class="text-muted">Wypełnij dane swojego projektu</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.title.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.description.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <label for="{{ form.visibility.id_for_label }}" class="form-label">{{ form.visibility.label }}</label>
+                    {{ form.visibility }}
+                    {% if form.visibility.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.visibility.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">
+                        <strong>Publiczny:</strong> Wszyscy użytkownicy mogą zobaczyć i dołączyć do projektu<br>
+                        <strong>Prywatny:</strong> Tylko użytkownicy z kodem dostępu mogą dołączyć
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Utwórz projekt</button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Anuluj</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

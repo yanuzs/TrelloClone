@@ -1,0 +1,120 @@
+{% extends 'trello/base.html' %}
+
+{% block title %}Dashboard - TrelloClone{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 col-md-7 order-2 order-md-1">
+        <div class="auth-card p-4 mb-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+                <h2 class="fw-bold text-primary mb-0">Moje projekty</h2>
+                <a href="{% url 'create_project' %}" class="btn btn-primary w-100 w-md-auto">
+                    <i class="bi bi-plus-circle"></i> Utwórz projekt
+                </a>
+            </div>
+
+            {% if projects %}
+                <div class="row">
+                    {% for project in projects %}
+                        <div class="col-xl-6 col-lg-12 col-md-12 mb-3">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start mb-2 gap-2">
+                                        <h5 class="card-title mb-1">{{ project.title }}</h5>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            {% if project.visibility == 'public' %}
+                                                <span class="badge bg-success">Publiczny</span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">Prywatny</span>
+                                            {% endif %}
+                                            {% if project.status == 'active' %}
+                                                <span class="badge bg-primary">Aktywny</span>
+                                            {% elif project.status == 'completed' %}
+                                                <span class="badge bg-success">Zakończony</span>
+                                            {% elif project.status == 'paused' %}
+                                                <span class="badge bg-secondary">Wstrzymany</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    {% if project.description %}
+                                        <p class="card-text text-muted small">{{ project.description|truncatewords:15 }}</p>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+                                        <small class="text-muted">
+                                            {% if project.owner == user %}
+                                                Właściciel: Ty
+                                            {% else %}
+                                                Właściciel: {{ project.owner.username }}
+                                            {% endif %}
+                                        </small>
+                                        <a href="{% url 'project_detail' project.id %}" class="btn btn-sm btn-outline-primary w-100 w-sm-auto">
+                                            Otwórz
+                                        </a>
+                                    </div>
+                                    
+                                    {% if project.owner == user and project.visibility == 'private' %}
+                                        <div class="mt-2">
+                                            <small class="text-muted d-block">Kod dostępu:</small>
+                                            <code class="bg-light p-1 rounded d-inline-block">{{ project.access_code }}</code>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <h4 class="text-muted">Brak projektów</h4>
+                    <p class="text-muted">Utwórz swój pierwszy projekt lub dołącz do istniejącego!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-4 col-md-5 order-1 order-md-2">
+        <div class="auth-card p-4 mb-4">
+            <h5 class="fw-bold text-primary mb-3">Informacje o użytkowniku</h5>
+            <div class="mb-2">
+                <strong>Nazwa:</strong> {{ user.username }}<br>
+                <strong>Data dołączenia:</strong> {{ user.date_joined|date:"d.m.Y" }}<br>
+                {% if user.is_superuser %}
+                    <span class="badge bg-warning text-dark mt-2 d-inline-block">Superuser</span><br>
+                    <small class="text-muted d-block mt-1">Masz pełne uprawnienia administratora</small><br>
+                    <a href="/admin/" class="btn btn-sm btn-outline-primary mt-2 w-100 w-sm-auto" target="_blank">Panel Admina</a>
+                {% else %}
+                    <span class="badge bg-success mt-2 d-inline-block">Zwykły użytkownik</span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if not user.is_superuser %}
+        <div class="auth-card p-4">
+            <h5 class="fw-bold text-primary mb-3">Dołącz do projektu</h5>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="{{ join_form.access_code.id_for_label }}" class="form-label">
+                        {{ join_form.access_code.label }}
+                    </label>
+                    {{ join_form.access_code }}
+                    {% if join_form.access_code.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in join_form.access_code.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Wprowadź 8-znakowy kod otrzymany od właściciela projektu</div>
+                </div>
+                <button type="submit" name="join_project" class="btn btn-outline-primary w-100">
+                    Dołącz do projektu
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

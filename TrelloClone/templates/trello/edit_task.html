@@ -1,0 +1,99 @@
+{% extends 'trello/base.html' %}
+
+{% block title %}Edytuj zadanie - {{ project.title }} - TrelloClone{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="auth-card p-4">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold text-primary">Edytuj zadanie</h2>
+                <p class="text-muted">{{ project.title }} → {{ task.title }}</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.title.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.description.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.priority.id_for_label }}" class="form-label">{{ form.priority.label }}</label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.priority.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.assigned_to.id_for_label }}" class="form-label">{{ form.assigned_to.label }}</label>
+                            {{ form.assigned_to }}
+                            {% if form.assigned_to.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.assigned_to.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="{{ form.due_date.id_for_label }}" class="form-label">{{ form.due_date.label }}</label>
+                    {{ form.due_date }}
+                    {% if form.due_date.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.due_date.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="alert alert-info">
+                    <small>
+                        <strong>Informacje:</strong><br>
+                        • Utworzone przez: {{ task.created_by.username }}<br>
+                        • Data utworzenia: {{ task.created_at|date:"d.m.Y H:i" }}<br>
+                        • Aktualnie w kolumnie: {{ task.column.name }}
+                    </small>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                    <a href="{% url 'project_detail' project.id %}" class="btn btn-outline-secondary">Anuluj</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
